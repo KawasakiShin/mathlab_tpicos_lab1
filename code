@@ -1,0 +1,73 @@
+clear, clc, close all 
+ 
+T = 20; % период импульсов
+tau = 4; % длительность импульса
+N = 15; % количество гармоник для восстановления
+k = 0:N; % номера гармоник
+w = 2*pi*k/T; % частоты гармоник
+t = 0:T/20/N:3*T; % время (три периода) 
+ 
+% задаём прямоугольные импульсы
+u1 = rem(t,T)<tau; % несимметричный импульс
+u2 = rem(t+tau/2,T)<tau; % симметричный импульс
+ 
+% коэффициенты разложения несимметричного импульса
+c1 = sin(pi*k*tau/T).*exp(-i*pi*k*tau/T)/pi./k; 
+c1(1) = tau/T; % так как на нулевой частоте было деление на ноль
+% коэффициенты разложения симметричного импульса
+c2 = sin(pi*k*tau/T)/pi./k; 
+c2(1) = tau/T; % так как на нулевой частоте было деление на ноль
+% выделяем амплитудный и фазовый спектр
+A1 = abs(c1); % амплитудный спектр
+fi1 = angle(c1); % фазовый спектр
+A2 = abs(c2); 
+fi2 = angle(c2); 
+ 
+% восстанавливаем несимметричный импульс
+s1(1:length(t)) = c1(1); 
+for n = 2:N+1 
+ s1 = s1 + 2*A1(n)*cos(w(n)*t+fi1(n)); 
+end 
+% восстанавлмиваем симметричный импульс
+s2(1:length(t)) = c2(1); 
+for n = 2:N+1 
+ s2 = s2 + 2*A2(n)*cos(w(n)*t+fi2(n)); 
+end 
+ 
+% выводим графики спектров
+figure 
+subplot(2,2,1) 
+stem(w/2/pi, A1, 'k') 
+xlabel('f, Гц', 'FontName', 'Arial Cyr') 
+ylabel('Амплитуда', 'FontName', 'Arial Cyr') 
+subplot(2,2,3) 
+stem(w/2/pi, fi1, 'k') 
+xlabel('f, Гц', 'FontName', 'Arial Cyr') 
+ylabel('Фаза', 'FontName', 'Arial Cyr') 
+subplot(2,2,2) 
+stem(w/2/pi, A2, 'k') 
+xlabel('f, Гц', 'FontName', 'Arial Cyr') 
+ylabel('Амплитуда', 'FontName', 'Arial Cyr') 
+subplot(2,2,4) 
+stem(w/2/pi, fi2, 'k') 
+xlabel('f, Гц', 'FontName', 'Arial Cyr') 
+ylabel('Фаза', 'FontName', 'Arial Cyr') 
+ 
+figure 
+subplot(2,1,1) 
+plot(t,u1,'k:', t,s1,'k'), axis([0 max(t) -0.2 1.2]) 
+16
+xlabel('t, c'), ylabel('u_1(t), s_1(t)'), legend('u_1','s_1') 
+subplot(2,1,2) 
+plot(t,u2,'k:', t,s2,'k'), axis([0 max(t) -0.2 1.2]) 
+xlabel('t, c'), ylabel('u_2(t), s_2(t)'), legend('u_2','s_2') 
+ 
+figure 
+for m=2:5 
+ subplot(4,1,m-1) 
+ plot(t,A1(m)*cos(w(m)*t+fi1(m)),'k', ... 
+ t,A2(m)*cos(w(m)*t+fi2(m)),'k:') 
+ axis([0, T, -0.3, 0.3]) 
+ xlabel('t, c') 
+ ylabel(['Гармоника ' num2str(m-1)], 'FontName', 'Arial Cyr') 
+end 
